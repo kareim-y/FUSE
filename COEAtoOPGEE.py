@@ -129,7 +129,8 @@ def main():
     # Dictionary with keys and values to be updated in the Analysis element
     analysis_updates = {
         'functional_unit': 'oil',
-        'GWP_horizon': '100'
+        'GWP_horizon': '100',
+        'GWP_version': 'AR5'
     }
 
     # Predefined parameters for the dictionary keys
@@ -228,15 +229,52 @@ def main():
             field_updates = apply_conversions(field_updates, conversion_mappings)
             field_updates_dicts[field_name] = field_updates
 
-    # Update Analysis element
-    analysis = root.find('.//Analysis[@name="SSE_test"]') # Find the Analysis element with the name "SSE_test"
-    if analysis is not None:
+    # Update or create Analysis element
+    # analysis = root.find('.//Analysis[@name="SSE_test"]') # Find the Analysis element with the name "SSE_test"
+    # if analysis is not None:
+    #     group_element = ET.SubElement(analysis, 'Group')
+    #     group_element.text = 'all'
+    #     for a in analysis.findall('A'):
+    #         # If the "name" attribute of an >A< element matches a key in analysis_updates, update its text
+    #         if a.get('name') in analysis_updates:
+    #             a.text = analysis_updates[a.get('name')]
+
+    # Update or create Analysis element
+    analysis = root.find('.//Analysis[@name="COEA_run"]')  # Find the Analysis element with the name "COEA_run"
+
+    # If the Analysis element does not exist, create it
+    if analysis is None:
+        analysis = ET.SubElement(root, 'Analysis', {'name': 'COEA_run'})
+
+    # Check if <Group>all</Group> already exists within the Analysis element
+    group_exists = any(group.text == 'all' for group in analysis.findall('Group'))
+    if not group_exists:
         group_element = ET.SubElement(analysis, 'Group')
         group_element.text = 'all'
-        for a in analysis.findall('A'):
-            # If the "name" attribute of an >A< element matches a key in analysis_updates, update its text
-            if a.get('name') in analysis_updates:
-                a.text = analysis_updates[a.get('name')]
+
+# Update or create the <A> elements within the Analysis element
+    for key, value in analysis_updates.items():
+        # Check if the <A> element already exists
+        a_element = analysis.find(f'A[@name="{key}"]')
+        if a_element is not None:
+            # Update existing element's text
+            a_element.text = value
+        else:
+            # Create the element if it does not exist
+            ET.SubElement(analysis, 'A', {'name': key}).text = value
+
+
+    # Get all existing field names from the current XML structure
+    existing_fields = root.findall('.//Field[@modifies="template"]')
+
+    # Extract the names of fields that should be present based on the current run
+    required_field_names = set(field_updates_dicts.keys())
+
+    # Remove fields that are not part of the current run
+    for field in existing_fields:
+        field_name = field.get('name')
+        if field_name not in required_field_names:
+            root.remove(field)  # Remove fields that are not in the required list
 
     # Update or create Field elements
     for field_name, field_updates in field_updates_dicts.items():
