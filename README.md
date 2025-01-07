@@ -2,7 +2,7 @@
 
 ## Previous name: Canadian Oilfield Envrionmental Assessor (COEA)
 
-Repository for the Canadian Gas Oil Emissions Data Assessor (GOEDA) tool.  
+Repository for the Gas Oil Emissions Data Assessor (GOEDA) tool.  
 This version is created by: Kareem Youssef  
 With contributions and guidance from: Dr. Joule Bergerson and Julia Yuan
 
