@@ -7,7 +7,7 @@ from model_inputs import ModelInputs
 import pickle
 import os
 import importlib
-
+import platform
 
 def validate_date(date_text, format):
     """
@@ -80,7 +80,7 @@ def validate_date_ym(date_text):
     """
     try:
         if date_text == '':
-            return True
+            return False
         else:
             datetime.strptime(date_text, '%Y-%m')
         return True
@@ -99,7 +99,7 @@ def validate_facility_date(date_text):
     """
     try:
         if date_text == '':
-            return True
+            return False
         else:
             date = datetime.strptime(date_text, '%Y-%m')
             # Define the range
@@ -122,8 +122,8 @@ def validate_number_in_range(number, range_tuple):
         Boolean: True if the number is within the range, otherwise False.
     """
     # Check if input was left blank
-    if number == '':
-        return True
+    if number.isnumeric() == False:
+        return False
     else:
         # Convert inputs to floats to ensure they are numeric
         number = float(number)
@@ -150,7 +150,7 @@ def validate_oil_production(input_text):
     
 def open_formations_list():
     """
-    Used to display list of formations available for plotting
+    Used to display list of formations available for plotting, checks which operating system is in use to ensure the formations directory is called correctly 
 
     Parameters:
         None
@@ -158,11 +158,27 @@ def open_formations_list():
     Returns:
         None
     """
-    subprocess.run(["open", "runfiles/list_of_producing_formations.txt"]) 
+    formations_list = "runfiles/list_of_producing_formations.txt"
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .py file is
+    full_path = os.path.join(base_dir, formations_list)
+
+    system_platform = platform.system()
+    try:
+        if system_platform == "Windows":
+            os.startfile(full_path)
+        elif system_platform == "Darwin":  # macOS
+            subprocess.run(["open", full_path])
+        elif system_platform == "Linux":
+            subprocess.run(["xdg-open", full_path])
+        else:
+            print(f"Unsupported OS: {system_platform}")
+    except Exception as e:
+        print(f"Error opening file: {e}")
 
 def open_graph_list(list_directory):
     """
-    Used to display list of graphs available for plotting
+    Used to display list of graphs available for plotting, checks which operating system is in use to ensure the list directory is called correctly 
 
     Parameters:
         list_directory (string): contains the directory storing the graph list.
@@ -170,7 +186,21 @@ def open_graph_list(list_directory):
     Returns:
         None
     """
-    subprocess.run(["open", list_directory]) 
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .py file is
+    full_path = os.path.join(base_dir, list_directory)
+
+    system_platform = platform.system()
+    try:
+        if system_platform == "Windows":
+            os.startfile(full_path)
+        elif system_platform == "Darwin":  # macOS
+            subprocess.run(["open", full_path])
+        elif system_platform == "Linux":
+            subprocess.run(["xdg-open", full_path])
+        else:
+            print(f"Unsupported OS: {system_platform}")
+    except Exception as e:
+        print(f"Error opening file: {e}")
 
 def toggle_state(checkbox_var, *items):
     """
@@ -255,7 +285,7 @@ def submit_data():
 
     inject_startdate = inject_startdate_entry.get()
     inject_enddate = inject_enddate_entry.get()
-    inject_graph = inject_graph_entry.get()
+    inject_graph = inject_graph_entry.get() 
 
     facility_startdate = facility_startdate_entry.get()
     facility_enddate = facility_enddate_entry.get()
@@ -282,39 +312,47 @@ def submit_data():
     if not validate_positive_input(max_gor):
         messagebox.showerror("Input Error", "Maximum First 12 month Ave GOR must be a non-negative number.")
         return
-    if not validate_number_in_range(prod_graph, (5,42)):
-        messagebox.showerror("Input Error", "There is only 42 graphing options in \"First Year Production Trend Analysis\". Please ensure you enter a number between 1-42." )
-        return
-    if not validate_date_ym(prod_startdate):
-        messagebox.showerror("Input Error", "Production start date is not in the correct format (YYYY-MM).")
-        return
-    if not validate_date_ym(prod_enddate):
-        messagebox.showerror("Input Error", "Production end date is not in the correct format (YYYY-MM).")
-        return
-    if not validate_number_in_range(prod_graph2, (5,42)):
-        messagebox.showerror("Input Error", "There is only 42 graphing options in \"Choose graphs to display from production analysis\". Please ensure you enter a number between 1-42." )
-        return
-    if not validate_number_in_range(inject_graph, (5,52)):
-        messagebox.showerror("Input Error", "There is only 52 graphing options in \"Choose graphs to display from injection analysis\". Please ensure you enter a number between 1-52." )
-        return
-    if not validate_date_ym(inject_startdate):
-        messagebox.showerror("Input Error", "Injection start date is not in the correct format (YYYY-MM).")
-        return
-    if not validate_date_ym(inject_enddate):
-        messagebox.showerror("Input Error", "Injection end date is not in the correct format (YYYY-MM).")
-        return
-    if not validate_facility_date(facility_startdate):
-        messagebox.showerror("Input Error", "Facility start date has to be in the correct format (YYYY-MM) AND between 2014-01 and 2019-12")
-        return
-    if not validate_facility_date(facility_enddate):
-        messagebox.showerror("Input Error", "Facility end date has to be in the correct format (YYYY-MM) AND between 2014-01 and 2019-12")
-        return
-    if not validate_positive_input(min_welltime):
-        messagebox.showerror("Input Error", "\"Minimum well producing time (years)\" has to be a non-negative number")
-        return
-    if not validate_oil_production(min_wellprod):
-        messagebox.showerror("Input Error", "\"Minimum oil production (bbl/day)\" has to be a positive number greater than 0.0001")
-        return
+
+    if prod_data_checkbox == True:
+        if not validate_number_in_range(prod_graph, (0,42)):
+            messagebox.showerror("Input Error", "There is only 42 graphing options in \"First Year Production Trend Analysis\". Please ensure you enter a number between 1-42. Or enter 0 to skip" )
+            return
+        if not validate_date_ym(prod_startdate):
+            messagebox.showerror("Input Error", "Production start date is not in the correct format (YYYY-MM).")
+            return
+        if not validate_date_ym(prod_enddate):
+            messagebox.showerror("Input Error", "Production end date is not in the correct format (YYYY-MM).")
+            return
+        if not validate_number_in_range(prod_graph2, (0,42)):
+            messagebox.showerror("Input Error", "There is only 42 graphing options in \"Choose graphs to display from production analysis\". Please ensure you enter a number between 1-42. Or enter 0 to skip" )
+            return
+    
+    if inject_data_checkbox == True:
+        if not validate_number_in_range(inject_graph, (0,52)):
+            messagebox.showerror("Input Error", "There is only 52 graphing options in \"Choose graphs to display from injection analysis\". Please ensure you enter a number between 1-52. Or enter 0 to skip" )
+            return
+        if not validate_date_ym(inject_startdate):
+            messagebox.showerror("Input Error", "Injection start date is not in the correct format (YYYY-MM).")
+            return
+        if not validate_date_ym(inject_enddate):
+            messagebox.showerror("Input Error", "Injection end date is not in the correct format (YYYY-MM).")
+            return
+        
+    if facility_data_checkbox == True:        
+        if not validate_facility_date(facility_startdate):
+            messagebox.showerror("Input Error", "Facility start date has to be in the correct format (YYYY-MM) AND between 2014-01 and 2019-12")
+            return
+        if not validate_facility_date(facility_enddate):
+            messagebox.showerror("Input Error", "Facility end date has to be in the correct format (YYYY-MM) AND between 2014-01 and 2019-12")
+            return
+        
+    if OPGEE_export_checkbox == True:
+        if not validate_positive_input(min_welltime):
+            messagebox.showerror("Input Error", "\"Minimum well producing time (years)\" has to be a non-negative number")
+            return
+        if not validate_oil_production(min_wellprod):
+            messagebox.showerror("Input Error", "\"Minimum oil production (bbl/day)\" has to be a positive number greater than 0.0001")
+            return
 
     # Create an instance of ModelInputs and store the data (refer to comments in model_inputs.py)
     inputs_instance = ModelInputs(
@@ -382,10 +420,11 @@ def submit_data():
         # Display success message if the first subprocess completes without errors
         messagebox.showinfo("Status Update", "COEA Run Complete")
         
-        # Only run the second subprocess if the first was successful
+        # Get file directory of the file initiating the second subprocess
         script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
         script_path = os.path.join(script_dir, 'COEAtoOPGEE.py')  # Get relative directory for COEAtoOPGEE.py
         
+        # Only run the second subprocess if the first was successful
         try:
             # Attempt to run the second subprocess with error checking
             subprocess.run(['python', script_path], check=True)
@@ -410,26 +449,50 @@ def submit_data():
 app = tk.Tk()
 app.title("Canadian Oilfield Environmental Assessment Model")
 
-# Creates a canvas and a scrollbar for a scrollable frame
+# **ADDED**: Create a Canvas and vertical Scrollbar
 canvas = tk.Canvas(app)
-scrollbar = tk.Scrollbar(app, orient="vertical", command=canvas.yview) # Vertical scrollbar linked to canvas
-scrollable_frame = tk.Frame(canvas) # Frame to contain all scrollable content
+scrollbar = tk.Scrollbar(app, orient="vertical", command=canvas.yview)  # **ADDED**
+canvas.configure(yscrollcommand=scrollbar.set)                            # **ADDED**
 
-# Configure the scrollable frame to resize based on the canvas dimensions
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(
-        scrollregion=canvas.bbox("all") # Update the scroll region based on the frame's size
-    )
-)
+# **ADDED**: Pack scrollbar and canvas into the main window
+scrollbar.pack(side="right", fill="y")                                    # **ADDED**
+canvas.pack(side="bottom", fill="both", expand=True)                        # **ADDED**
 
-# Create a window inside the canvas for the scrollable frame
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set) # Set scrollbar to canvas
+# **ADDED**: Create a Frame inside the Canvas to hold all widgets
+scrollable_frame = tk.Frame(canvas)                                       # **ADDED**
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")         # **ADDED**
 
-# Pack scrollbar and canvas into the main window
-scrollbar.pack(side="right", fill="y")
-canvas.pack(side="left", fill="both", expand=True)
+# **ADDED**: Update scrollregion when the inner frame changes size
+def _on_frame_configure(event):
+    canvas.configure(scrollregion=canvas.bbox("all"))
+scrollable_frame.bind("<Configure>", _on_frame_configure)                  # **ADDED**
+
+# **ADDED (Optional)**: Enable mousewheel scrolling on Windows/macOS/Linux
+def _on_mousewheel(event):
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+canvas.bind_all("<MouseWheel>", _on_mousewheel)                            # **ADDED**
+
+
+# # Creates a canvas and a scrollbar for a scrollable frame
+# canvas = tk.Canvas(app)
+# scrollbar = tk.Scrollbar(app, orient="vertical", command=canvas.yview) # Vertical scrollbar linked to canvas
+# scrollable_frame = tk.Frame(canvas) # Frame to contain all scrollable content
+
+# # Configure the scrollable frame to resize based on the canvas dimensions
+# scrollable_frame.bind(
+#     "<Configure>",
+#     lambda e: canvas.configure(
+#         scrollregion=canvas.bbox("all") # Update the scroll region based on the frame's size
+#     )
+# )
+
+# # Create a window inside the canvas for the scrollable frame
+# canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+# canvas.configure(yscrollcommand=scrollbar.set) # Set scrollbar to canvas
+
+# # Pack scrollbar and canvas into the main window
+# scrollbar.pack(side="right", fill="y")
+# canvas.pack(side="left", fill="both", expand=True)
 
 # Load and resize the image to fit the GUI
 image_path = "images/schulich-engineering.png" 
@@ -478,7 +541,7 @@ tk.Label(scrollable_frame, text= "______________________________________________
 tk.Label(scrollable_frame, text= "________________________________________________________________________________________________________________________________").grid(row=42, columnspan=3, sticky='w')
 
 # Create labels for production data analysis options
-prod_graph_label = tk.Label(scrollable_frame, text="Choose graphs To display from the \"First Year Production Trend Analysis\"\nTo view available graphs click \"Graphs Available\" button to the right", state=tk.DISABLED, justify='left')
+prod_graph_label = tk.Label(scrollable_frame, text="Choose graphs To display from the \"First Year Production Trend Analysis\"\nTo view available graphs click \"Graphs Available\" button to the right\nInsert 0 to skip", state=tk.DISABLED, justify='left')
 prod_graph_label.grid(row=13, sticky='w')
 prod_assess_label = tk.Label(scrollable_frame, text="The available data set contains monthly production data for wells between Jan-2005 and Dec-2019\nFor OPGEE field assessment, adjust start date to be first drill year", state=tk.DISABLED, justify='left')
 prod_assess_label.grid(row=14, sticky='w')
@@ -486,11 +549,11 @@ prod_startdate_label = tk.Label(scrollable_frame, text="Enter the Start Date (YY
 prod_startdate_label.grid(row=15, sticky='w')
 prod_enddate_label = tk.Label(scrollable_frame, text="Enter the End Date (YYYY-MM)", state=tk.DISABLED, justify='left')
 prod_enddate_label.grid(row=16, sticky='w')
-prod_graph_label2 = tk.Label(scrollable_frame, text="Choose Graphs To Display from production analysis\nTo view available graphs click \"Graphs Available\" button to the right", state=tk.DISABLED, justify='left')
+prod_graph_label2 = tk.Label(scrollable_frame, text="Choose Graph To Display from production analysis\nTo view available graphs click \"Graphs Available\" button to the right\nInsert 0 to skip", state=tk.DISABLED, justify='left')
 prod_graph_label2.grid(row=17, sticky='w')
 
 # Create labels for injection data analysis options
-inject_graph_label = tk.Label(scrollable_frame, text="Choose Graphs To Display from injection analysis\nTo View available graphs click \"Graphs Available\" button to the right", state=tk.DISABLED, justify='left')
+inject_graph_label = tk.Label(scrollable_frame, text="Choose Graph To Display from injection analysis\nTo View available graphs click \"Graphs Available\" button to the right\nInsert 0 to skip", state=tk.DISABLED, justify='left')
 inject_graph_label.grid(row=20, sticky='w')
 inject_startdate_label = tk.Label(scrollable_frame, text="Enter the Start Date (YYYY-MM)", state=tk.DISABLED, justify='left')
 inject_startdate_label.grid(row=21, sticky='w')

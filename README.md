@@ -23,8 +23,6 @@ The GOEDA tool relies on several datasets describing several activities of the u
 
 The Project Data can be downloaded and unzipped from here - https://drive.google.com/file/d/17g927s3yLod_ujxeNGZtKvLEfnrX6hYj/view?usp=sharing
 
-Additonal project data and reports that may be of use can be found here - https://drive.google.com/drive/folders/1-kXnw8VZBgOziqi7pjq4OuPjRuDqKCF-?usp=sharing
-
 ## Setup
 
 ### Folder Structure
@@ -47,7 +45,7 @@ To ensure that GOEDA connects properly with OPGEE Python, it is important that y
 
 Once the repository cloning is comepleted, follow the steps below:
 
-1. Install conda miniforge on local machine (https://github.com/conda-forge/miniforge). Existing conda install should also work.
+1. Install miniconda on your local machine (https://www.anaconda.com/docs/getting-started/miniconda/install). Existing conda install should also work.
 2. Using terminal, navigate into the `COEAv2/COEA_py3` folder then create the enviornment `conda create --name coea` (This command will make `coea` the name of the environment, you can pick another name by using `conda create --name <chosen name>`)
 3. Once the conda environment is created, activate it using `conda activate coea` (or `conda activate <chosen name>`)
 4. Install the following required libraries while the conda environemnt is active, `pip install pandas numpy matplotlib scipy chardet shapely openpyxl`
@@ -56,17 +54,18 @@ Once the repository cloning is comepleted, follow the steps below:
 
 ### OPGEEv4 Installation
 
-1. Open a new terminal and use this link to navigate to the OPGEE documentation, specifically to the _Install opgee in an Anaconda virtual environment_ page. https://opgee.readthedocs.io/en/latest/install.html
-2. If the link above doesn't work, navigate to the README.md file in the OPGEEv4 repository (https://github.com/msmasnadi/OPGEEv4) and a link to the OPGEEv4 documentation should be linked there.
-3. In the _Install opgee in an Anaconda virtual environment_ tab, follow steps 1 to 3.
-4. now navigate to the LCA/ folder in terminal, then run the command in step 4 in _Install opgee in an Anaconda virtual environment_, this command will clone the OPGEEv4 repository.
-5. This should be your folder structre now:  
+1. Open a new terminal and navigate to the LCA/ folder you created earlier
+2. Use this link to navigate to the OPGEE documentation, specifically to the _Install opgee in an Anaconda virtual environment_ page. https://opgee.readthedocs.io/en/latest/install.html
+3. If the link above doesn't work, navigate to the README.md file in the OPGEEv4 repository (https://github.com/msmasnadi/OPGEEv4) and a link to the OPGEEv4 documentation should be linked there.
+4. In the _Install opgee in an Anaconda virtual environment_ tab, follow steps 1 to 3.
+5. now navigate to the LCA/ folder in terminal, then run the command in step 4 in _Install opgee in an Anaconda virtual environment_, this command will clone the OPGEEv4 repository.
+6. This should be your folder structre now:  
    LCA/  
    ├── COEAv2/  
    &nbsp;│ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── COEA*py3/  
    │ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── Project Data/\_dataset folders*/  
    └── OPGEEv4/
-6. Your OPGEE package should be ready for use now
+7. Your OPGEE package should be ready for use now
 
 ## Using GOEDA and OPGEE
 
@@ -84,7 +83,7 @@ Once the repository cloning is comepleted, follow the steps below:
 
 1. If GOEDA functions as intended, you will only need to enter 2 terminal commands to run OPGEEv4.
 2. Navigate to the `OPGEEv4/opgee` folder using another terminal page, activate the anaconda environment you set-up earlier (by following the _OPGEEv4 Installation_ section of this document), this command should be `conda activate opgee`
-3. Then run this command `opg run -o output -a SSE_test -m etc/opgee.xml` (This command works as of version 4.1.0 of OPGEEv4, the command in this step might change as future versions of OPGEEv4 are released, if you run into issues in this step, refer to the OPGEEv4 documentation)
+3. Then run this command `opg run -o output -a COEA_run -m etc/opgee.xml` (This command works as of version 4.1.0 of OPGEEv4, the command in this step might change as future versions of OPGEEv4 are released, if you run into issues in this step, refer to the OPGEEv4 documentation)
 4. Keep an eye on terminal to see the progress of the OPGEEv4 run.
 5. Once the run is complete, the results will be saved in `carbon_intensity.csv` file, in the folder `OPGEEv4/output`.
 
