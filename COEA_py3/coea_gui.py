@@ -40,6 +40,56 @@ def validate_provinces(provinces):
     input_provinces = set(provinces.split(','))
     return input_provinces.issubset(valid_provinces)
 
+def all_formations_request(input_formations):
+    """
+    Checks if the user selected "all" formations and, if true, returns a list containing all formations 
+
+    Parameters:
+        input_formations (string): string containing the user's input of formations.
+
+    Returns:
+        string: returns a string containing the user selection of formations or all available formations.
+    """
+
+    if input_formations.lower() == 'all': # Checks if user requested all formations
+        formations_list_directory = "runfiles/list_of_producing_formations_code_friendly.txt"
+
+        base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .txt file is
+        full_path = os.path.join(base_dir, formations_list_directory)
+
+        with open(full_path, 'r', encoding='utf-8') as f:
+            # strip out any empty lines and whitespace
+            names = [line.strip() for line in f if line.strip()]
+        valid_formations = ','.join(names)
+
+        input_formations = valid_formations # enters all formations into the input_formtaions list
+        return input_formations # returns a string containing all formations  
+    
+    else: 
+        return input_formations # returns a string containing user inputted formations
+
+def validate_formations(input_formations):
+    """
+    Ensures that the formations entered by the user is one of the valid formations stored in the formations txt file
+
+    Parameters:
+        input_formations (string): string containing the user's selection of formations.
+
+    Returns:
+        Boloean: Returns True if the data is correct otherwise returns false.
+    """
+
+    formations_list_directory = "runfiles/list_of_producing_formations_code_friendly.txt"
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .txt file is
+    full_path = os.path.join(base_dir, formations_list_directory)
+
+    with open(full_path, 'r') as f: # opens the code friendlt text file containing the formations list
+        valid_formations = f.read().splitlines() # Creates a list of the valid formations
+
+    input_formations = set(input_formations.split(',')) # converts string to set for validation purposes
+    return input_formations.issubset(valid_formations) # ensures all entered formations are valid
+
 def validate_horizontal(horizontal):
     """
     Ensures that the horizontal well selection by user is True, False or Both.
@@ -160,7 +210,7 @@ def open_formations_list():
     """
     formations_list = "runfiles/list_of_producing_formations.txt"
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .py file is
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .txt file is
     full_path = os.path.join(base_dir, formations_list)
 
     system_platform = platform.system()
@@ -186,7 +236,7 @@ def open_graph_list(list_directory):
     Returns:
         None
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .py file is
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .txt file is
     full_path = os.path.join(base_dir, list_directory)
 
     system_platform = platform.system()
@@ -225,6 +275,15 @@ def toggle_state(checkbox_var, *items):
 
 # Function to check if required libraries are installed
 def check_libraries():
+    """
+    Used to check if all required libraries to run the tool are installed
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     required_libraries = [
         'numpy', 'pandas', 'matplotlib', 'scipy', 'openpyxl', 'PIL', 'tkinter', 
         'subprocess', 'datetime', 'pickle', 'chardet', 'shapely'
@@ -303,6 +362,10 @@ def submit_data():
     if not validate_provinces(provinces):
         messagebox.showerror("Input Error", "Provinces of Interest must be AB, BC, and/or SK.")
         return
+    formations_final = all_formations_request(formations) # checks if user selected "all" formations
+    if not validate_formations(formations_final):
+        messagebox.showerror("Input Error", "Formations entered incorrectly, click \"Search\" button to view formations list.\nIf entering more than one formation, seperate them with a ',' and no spaces\nEnter 'all' to select all formations")
+        return
     if not validate_horizontal(horizontal):
         messagebox.showerror("Input Error", 'Horizontal Well must be "True", "False", or "Both".')
         return
@@ -356,7 +419,7 @@ def submit_data():
 
     # Create an instance of ModelInputs and store the data (refer to comments in model_inputs.py)
     inputs_instance = ModelInputs(
-        project_name, drilled_after, drilled_before, provinces, formations, horizontal,
+        project_name, drilled_after, drilled_before, provinces, formations_final, horizontal,
         min_gor, max_gor, 
         prod_data_checkbox = prod_data_checkbox,
         prod_startdate = prod_startdate,
@@ -424,18 +487,21 @@ def submit_data():
         script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
         script_path = os.path.join(script_dir, 'COEAtoOPGEE.py')  # Get relative directory for COEAtoOPGEE.py
         
-        # Only run the second subprocess if the first was successful
-        try:
-            # Attempt to run the second subprocess with error checking
-            subprocess.run(['python', script_path], check=True)
-            # Display success message if the second subprocess completes without errors
-            messagebox.showinfo("Status Update", "COEA Data Prepared for OPGEEv4 Run")
-        except subprocess.CalledProcessError as e:
-            # Display error message if the second subprocess fails
-            messagebox.showerror("Run Error", f"COEAtoOPGEE Run Failed: {e}\n\n Check terminal for error details")
-        except Exception as e:
-            # Display a generic error message for any other exceptions
-            messagebox.showerror("Run Error", f"An unexpected error occurred during COEAtoOPGEE: {e}\n\n Check terminal for error details")
+        # Only run the second subprocess if the first was successful and the "Export to OPGEE" checkbox is selected
+
+        if OPGEE_export_checkbox == True:
+            try:
+                # Attempt to run the second subprocess with error checking
+                subprocess.run(['python', script_path], check=True)
+                # Display success message if the second subprocess completes without errors
+                messagebox.showinfo("Status Update", "COEA Data Prepared for OPGEEv4 Run")
+            except subprocess.CalledProcessError as e:
+                # Display error message if the second subprocess fails
+                messagebox.showerror("Run Error", f"COEAtoOPGEE Run Failed: {e}\n\n Check terminal for error details.")
+            except Exception as e:
+                # Display a generic error message for any other exceptions
+                messagebox.showerror("Run Error", f"An unexpected error occurred during COEAtoOPGEE: {e}\n\n Check terminal for error details.")
+        else: messagebox.showinfo("Status Update", "Exporting to OPGEE not selected.\nOperation completed.")
 
     except subprocess.CalledProcessError as e:
         # Display error message if the first subprocess fails
@@ -528,7 +594,7 @@ tk.Label(scrollable_frame, text="Enter Project Name", font='Helvetica 14 bold', 
 tk.Label(scrollable_frame, text="Enter a Drilled After Date (DD/MM/YYYY):", font='Helvetica 14 bold', justify='left').grid(row=4, sticky='w')
 tk.Label(scrollable_frame, text="Enter a Drilled Before Date (DD/MM/YYYY):", font='Helvetica 14 bold', justify='left').grid(row=5, sticky='w')
 tk.Label(scrollable_frame, text="Enter provinces of interest separate by a comma (,)\n(AB,BC and SK available):", font='Helvetica 14 bold', justify='left').grid(row=6, sticky='w')
-tk.Label(scrollable_frame, text='Enter formations of Interest (separate by , )\nClick "Search" for a complete list of formations:', font='Helvetica 14 bold', justify='left').grid(row=7, sticky='w')
+tk.Label(scrollable_frame, text='Enter formations of Interest, separate by (,)\nClick "Search" for a complete list of formations\nEnter \'all\' to select all available formations', font='Helvetica 14 bold', justify='left').grid(row=7, sticky='w')
 tk.Label(scrollable_frame, text="Horizontal Well? (True, False or Both):", font='Helvetica 14 bold', justify='left').grid(row=8, sticky='w')
 tk.Label(scrollable_frame, text="Enter a Minimum First 12 month Ave GOR (m3/m3):", font='Helvetica 14 bold', justify='left').grid(row=9, sticky='w')
 tk.Label(scrollable_frame, text="Enter a Maximum First 12 month Ave GOR (m3/m3):", font='Helvetica 14 bold', justify='left').grid(row=10, sticky='w')
