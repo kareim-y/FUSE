@@ -463,7 +463,7 @@ def submit_data():
     with open('model_input_instance.pkl', 'wb') as f:
         pickle.dump(inputs_instance, f)
 
-    # # Stores the name of the project in a text file, to be used later in preparing COEA data for OPGEE Python, assumes the text file is one directory up from the script's location
+    # # Stores the name of the project in a text file, to be used later in preparing FUSE data for OPGEE Python, assumes the text file is one directory up from the script's location
     file_path = os.path.join(os.path.dirname(__file__), '..', 'project_name.txt')
     with open(file_path, 'r+') as file:
         # Read the current contents
@@ -476,16 +476,16 @@ def submit_data():
         file.write(project_name)
         file.truncate()
 
-    # Run COEA main file with error handling
+    # Run FUSE main file with error handling
     try:
         # Attempt to run the first subprocess with error checking
         subprocess.run(["python", "Canadian_Oilfield_Environmental_Assessor.py"], check=True)
         # Display success message if the first subprocess completes without errors
-        messagebox.showinfo("Status Update", "COEA Run Complete")
+        messagebox.showinfo("Status Update", "FUSE Run Complete")
         
         # Get file directory of the file initiating the second subprocess
         script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-        script_path = os.path.join(script_dir, 'COEAtoOPGEE.py')  # Get relative directory for COEAtoOPGEE.py
+        script_path = os.path.join(script_dir, 'FUSEtoOPGEE.py')  # Get relative directory for FUSEtoOPGEE.py
         
         # Only run the second subprocess if the first was successful and the "Export to OPGEE" checkbox is selected
 
@@ -494,18 +494,18 @@ def submit_data():
                 # Attempt to run the second subprocess with error checking
                 subprocess.run(['python', script_path], check=True)
                 # Display success message if the second subprocess completes without errors
-                messagebox.showinfo("Status Update", "COEA Data Prepared for OPGEEv4 Run")
+                messagebox.showinfo("Status Update", "FUSE Data Prepared for OPGEEv4 Run")
             except subprocess.CalledProcessError as e:
                 # Display error message if the second subprocess fails
-                messagebox.showerror("Run Error", f"COEAtoOPGEE Run Failed: {e}\n\n Check terminal for error details.")
+                messagebox.showerror("Run Error", f"FUSEtoOPGEE Run Failed: {e}\n\n Check terminal for error details.")
             except Exception as e:
                 # Display a generic error message for any other exceptions
-                messagebox.showerror("Run Error", f"An unexpected error occurred during COEAtoOPGEE: {e}\n\n Check terminal for error details.")
+                messagebox.showerror("Run Error", f"An unexpected error occurred during FUSEtoOPGEE: {e}\n\n Check terminal for error details.")
         else: messagebox.showinfo("Status Update", "Exporting to OPGEE not selected.\nOperation completed.")
 
     except subprocess.CalledProcessError as e:
         # Display error message if the first subprocess fails
-        messagebox.showerror("Run Error", f"COEA Run Failed: {e}\n\n Check terminal for error details")
+        messagebox.showerror("Run Error", f"FUSE Run Failed: {e}\n\n Check terminal for error details")
     except Exception as e:
         # Display a generic error message for any other exceptions in the first subprocess
         messagebox.showerror("Run Error", f"An unexpected error occurred: {e}\n\n Check terminal for error details")
@@ -513,7 +513,7 @@ def submit_data():
     
 # Initialize the main application window
 app = tk.Tk()
-app.title("Canadian Oilfield Environmental Assessment Model")
+app.title("Framework for Unifying Sources and Emissions models")
 
 # **ADDED**: Create a Canvas and vertical Scrollbar
 canvas = tk.Canvas(app)
@@ -571,10 +571,10 @@ image_label = tk.Label(scrollable_frame, image=photo)
 image_label.grid(row=0, column=0, columnspan=3) # Spanning across 3 columns
 
 # Add the introductory text and contributors' information
-tk.Label(scrollable_frame, text="\nCoded By: Alex Bradley, Kareem Youssef\
+tk.Label(scrollable_frame, text="\nCoded By: Kareem Youssef, Alex Bradley\
 \nContributors: Dr. Joule Bergerson, Julia Yuan\
 \n==========================================================\n\
-Welcome to the Canadian Oilfield Environmental Assessor (COEA)\n\
+Welcome to the Framework for Unifying Sources and Emissions models (FUSE)\n\
 ==========================================================\n\
 Data is available for wells drilled over the period Jan 2005 to Dec 2019\n\
 1 - Available Data For Analysis:\n\
@@ -825,7 +825,7 @@ inject_graph_button.grid(row=20, column=2, padx=10)
 # Add button for checking if required libraries are installed
 check_libraries_button = tk.Button(scrollable_frame, text="Check Installation of Required Libraries", command=check_libraries)
 check_libraries_button.grid(row=48, column=2, pady=4)
-# Add button for submitting inputs into COEA tool
+# Add button for submitting inputs into FUSE tool
 tk.Button(scrollable_frame, text='Submit', command=submit_data).grid(row=48, column=1, pady=4)
 
 # Start the Tkinter "event loop" to display the GUI

@@ -170,7 +170,7 @@ def main():
 
     # Read the text file containing the project name
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-    script_path_2 = os.path.join(script_dir, 'COEAv2/project_name.txt')
+    script_path_2 = os.path.join(script_dir, 'FUSE/project_name.txt')
     with open(script_path_2, 'r') as file: # open file in read only mode
         # Read the current contents
         content = file.read()
@@ -179,9 +179,9 @@ def main():
         project_name  = str(content_without_spaces)
 
     # Read the Excel file and extract data from the "inputs" tab
-    # excel_file = 'COEA_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_TestProject copy.xlsm'  # Replace with The OPGEE Excel file path
+    # excel_file = 'FUSE_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_TestProject copy.xlsm'  # Replace with The OPGEE Excel file path
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-    script_path_3 = os.path.join(script_dir, 'COEAv2/COEA_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_') # Construct directory of excel file
+    script_path_3 = os.path.join(script_dir, 'FUSE/FUSE_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_') # Construct directory of excel file
     excel_file = script_path_3 + project_name + '.xlsm' # Append the project name and file extension to complete the Excel file path
     print(excel_file) # Used for Debugging
     df = pd.read_excel(excel_file, sheet_name='Inputs') # Load the 'Inputs' sheet from the specified Excel file into a Pandas DataFrame
@@ -240,11 +240,11 @@ def main():
     #             a.text = analysis_updates[a.get('name')]
 
     # Update or create Analysis element
-    analysis = root.find('.//Analysis[@name="COEA_run"]')  # Find the Analysis element with the name "COEA_run"
+    analysis = root.find('.//Analysis[@name="FUSE_run"]')  # Find the Analysis element with the name "FUSE_run"
 
     # If the Analysis element does not exist, create it
     if analysis is None:
-        analysis = ET.SubElement(root, 'Analysis', {'name': 'COEA_run'})
+        analysis = ET.SubElement(root, 'Analysis', {'name': 'FUSE_run'})
 
     # Check if <Group>all</Group> already exists within the Analysis element
     group_exists = any(group.text == 'all' for group in analysis.findall('Group'))
