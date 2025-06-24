@@ -227,11 +227,16 @@ if ask_facility_data == True:
 	print('\n')
 	
 	province_facility_total = collections.OrderedDict()
-
 	#summarising data for each province, getting flare vent rates for wells
-	OPGEE_data, province_facility_total['AB'], count_AB_wells, count_AB_facilities = AB_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)
-	OPGEE_data, province_facility_total['BC'], count_BC_wells, count_BC_facilities =  BC_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)
-	OPGEE_data, province_facility_total['SK'], count_SK_wells, count_SK_facilities = SK_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)	
+	# Kareem edits:
+	count_AB_wells = count_BC_wells = count_SK_wells = 0
+	count_AB_facilities = count_BC_facilities = count_SK_facilities = 0
+	if 'AB' in inputs_instance.provinces.split(','):
+		OPGEE_data, province_facility_total['AB'], count_AB_wells, count_AB_facilities = AB_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)
+	if 'BC' in inputs_instance.provinces.split(','):
+		OPGEE_data, province_facility_total['BC'], count_BC_wells, count_BC_facilities =  BC_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)
+	if 'SK' in inputs_instance.provinces.split(','):
+		OPGEE_data, province_facility_total['SK'], count_SK_wells, count_SK_facilities = SK_facility_analysis(well_data, well_data_headings, OPGEE_data, dates_array)	
 	
 	connected_project_wells = count_SK_wells + count_BC_wells + count_AB_wells
 	connected_facilities = count_SK_facilities + count_BC_facilities + count_AB_facilities

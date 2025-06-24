@@ -83,7 +83,7 @@ Once the repository cloning is comepleted, follow the steps below:
 
 1. If FUSE functions as intended, you will only need to enter 2 terminal commands to run OPGEEv4.
 2. Navigate to the `OPGEEv4/opgee` folder using another terminal page, activate the anaconda environment you set-up earlier (by following the _OPGEEv4 Installation_ section of this document), this command should be `conda activate opgee`
-3. Then run this command `opg run -o output -a FUSE_run -m etc/opgee.xml` (This command works as of version 4.1.0 of OPGEEv4, the command in this step might change as future versions of OPGEEv4 are released, if you run into issues in this step, refer to the OPGEEv4 documentation)
+3. Then run this command `opg run -o output -a FUSE_run -m etc/fuse.xml` (This command works as of version 4.1.0 of OPGEEv4, the command in this step might change as future versions of OPGEEv4 are released, if you run into issues in this step, refer to the OPGEEv4 documentation)
 4. Keep an eye on terminal to see the progress of the OPGEEv4 run.
 5. Once the run is complete, the results will be saved in `carbon_intensity.csv` file, in the folder `OPGEEv4/output`.
 

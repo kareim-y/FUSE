@@ -231,8 +231,8 @@ def OPGEE_production_data(OPGEE_data, production_data, production_dict, date_arr
 			ave_oil = []
 			ave_cnd = []
 			for date in date_array:
-				ave_oil.append(production_dict['PRD Calndr-Day Avg OIL m3'][date])
-				ave_cnd.append(production_dict['PRD Calndr-Day Avg CND m3'][date])
+				ave_oil.append(production_dict['PRD Calndr-Day Avg OIL m3/day'][date]) # edited heading from old data name 'PRD Calndr-Day Avg OIL m3'
+				ave_cnd.append(production_dict['PRD Calndr-Day Avg CND m3/day'][date]) # edited heading from old data name 'PRD Calndr-Day Avg OIL m3'
 			ave_c5 = (np.mean(ave_oil) + np.mean(ave_cnd))*m3_bbl #non-weighted avg
 			OPGEE_data['assessed field'][i] = round(ave_c5,3)
 			#print(OPGEE_data['headings'][i] + '   ' + str(OPGEE_data['assessed field'][i]))

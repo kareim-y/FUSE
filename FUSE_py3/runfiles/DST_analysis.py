@@ -38,7 +38,7 @@ def DST_analysis(well_data, well_data_headings, DST_data, DST_headings, OPGEE_da
 
 	#date format
 	date_format1 = '%m/%d/%Y'
-	date_format2 = '%Y/%m/%d'
+	date_format2 = '%Y-%m-%d'
 
 	DST_well_data = dict() 
 	DST_test_dates = dict()
@@ -71,7 +71,7 @@ def DST_analysis(well_data, well_data_headings, DST_data, DST_headings, OPGEE_da
 
 				#test dates
 				DST_test_date =  DST_data[well][test][DST_headings.index('Test Date')]
-				DST_test_date = datetime.strptime(DST_test_date, date_format1)
+				DST_test_date = datetime.strptime(DST_test_date, date_format2)
 				date_diff = (DST_test_date - well_drill_date)
 				date_diff =  date_diff.days
 				#print(well, test, date_diff)

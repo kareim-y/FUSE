@@ -154,7 +154,7 @@ def validate_facility_date(date_text):
             date = datetime.strptime(date_text, '%Y-%m')
             # Define the range
             start_date = datetime.strptime('2014-01', '%Y-%m')
-            end_date = datetime.strptime('2019-12', '%Y-%m')
+            end_date = datetime.strptime('2025-04', '%Y-%m')
             # Check if the date is within the specified range
             return start_date <= date <= end_date
     except ValueError:
@@ -576,7 +576,7 @@ tk.Label(scrollable_frame, text="\nCoded By: Kareem Youssef, Alex Bradley\
 \n==========================================================\n\
 Welcome to the Framework for Unifying Sources and Emissions models (FUSE)\n\
 ==========================================================\n\
-Data is available for wells drilled over the period Jan 2005 to Dec 2019\n\
+Data is available for wells drilled over the period Jan 2005 to May 28th, 2025\n\
 1 - Available Data For Analysis:\n\
 2 - General Well Data (AB,BC,SK)\n\
 3 - Production Data (AB,BC,SK)\n\
@@ -609,7 +609,7 @@ tk.Label(scrollable_frame, text= "______________________________________________
 # Create labels for production data analysis options
 prod_graph_label = tk.Label(scrollable_frame, text="Choose graphs To display from the \"First Year Production Trend Analysis\"\nTo view available graphs click \"Graphs Available\" button to the right\nInsert 0 to skip", state=tk.DISABLED, justify='left')
 prod_graph_label.grid(row=13, sticky='w')
-prod_assess_label = tk.Label(scrollable_frame, text="The available data set contains monthly production data for wells between Jan-2005 and Dec-2019\nFor OPGEE field assessment, adjust start date to be first drill year", state=tk.DISABLED, justify='left')
+prod_assess_label = tk.Label(scrollable_frame, text="The available data set contains monthly production data for wells between Jan-2005 and May-28-2025\nFor OPGEE field assessment, adjust start date to be first drill year", state=tk.DISABLED, justify='left')
 prod_assess_label.grid(row=14, sticky='w')
 prod_startdate_label = tk.Label(scrollable_frame, text="Enter the Start Date (YYYY-MM)", state=tk.DISABLED, justify='left')
 prod_startdate_label.grid(row=15, sticky='w')
@@ -627,7 +627,7 @@ inject_enddate_label = tk.Label(scrollable_frame, text="Enter the End Date (YYYY
 inject_enddate_label.grid(row=22, sticky='w')
 
 # Create labels for facility data analysis options
-facility_info_label = tk.Label(scrollable_frame, text="Monthly Facility Data is Available from 2014-01 to 2019-12\nEnter The Date Range For Assessment (5-10 seconds per month)", state=tk.DISABLED, justify='left')
+facility_info_label = tk.Label(scrollable_frame, text="Monthly Facility Data is Available from 2014-01 to 2025-04\nEnter The Date Range For Assessment (5-10 seconds per month)", state=tk.DISABLED, justify='left')
 facility_info_label.grid(row=35, sticky='w')
 facility_startdate_label = tk.Label(scrollable_frame, text="Enter the Start Date (YYYY-MM)", state=tk.DISABLED, justify='left')
 facility_startdate_label.grid(row=36, sticky='w')

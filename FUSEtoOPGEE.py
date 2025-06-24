@@ -43,7 +43,7 @@ def apply_conversions(field_updates, mappings):
     Parameters:
     field_updates (dict): A dictionary containing field values that may need conversion.
     mappings (dict): A dictionary where the keys are variable names and the values are nested dictionaries, 
-                    which mapping integers to their corresponding string representations.
+                    which maps integers to their corresponding string representations.
 
     Returns:
     dictionary: The updated `field_updates` dictionary with the converted values.
@@ -87,15 +87,28 @@ def create_field_element(field_name, field_updates):
     new_field = ET.Element('Field', {'name': field_name, 'modifies': 'template'})
     group_element = ET.SubElement(new_field, 'Group')
     group_element.text = 'all'
+
     for key, value in field_updates.items():
         value = '' if pd.isna(value) else str(value)  # Replace NaN with an empty string, otherwise convert to string
+
+        if key == 'GOR':                              # When we're handling the GOR variable
+            try:
+                # try to parse it as a float
+                gor_val = float(value)
+            except ValueError:
+                gor_val = 0.0                         # Non-numeric fall-back
+            if gor_val == 0.0:                        # If it's exactly zero
+                value = '0.00001'                     # Enforce a small minimum value
+
         if key in ['fraction_diluent', 'heater_treater']:
             # Handle special case for fraction_diluent and heater_treater
-            process_class = 'HeavyOilDilution' if key == 'fraction_diluent' else 'CrudeOilDewatering'
-            process_element = ET.SubElement(new_field, 'Process', {'class': process_class})
-            a_element = ET.SubElement(process_element, 'A', {'name': key})
+            process_class = 'HeavyOilDilution' if key == 'fraction_diluent' else 'CrudeOilDewatering' # A conditional expression to choose between the two special cases
+            ET.SubElement(new_field, 'Process', {'class': process_class, 'enabled' : 'false'})        # Create a sub element titled 'Process', used to temporarily disable the process to avoid dublicate error in OPGEEv4 
+            process_element = ET.SubElement(new_field, 'Process', {'class': process_class})           # Create a sub element titled 'Process'
+            a_element = ET.SubElement(process_element, 'A', {'name': key})                            # Print variable nad value to the 'Process' sub element
         else:
-            a_element = ET.SubElement(new_field, 'A', {'name' : key})
+            a_element = ET.SubElement(new_field, 'A', {'name' : key})                                 
+
         a_element.text = value
     return new_field
 
@@ -122,9 +135,14 @@ def main():
 
     # Load the existing XML file
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-    script_path = os.path.join(script_dir, 'OPGEEv4/opgee/etc/opgee.xml') # Prepare the relative path to the XML file
-    tree = ET.parse(script_path)  # Parse the XML file into an ElementTree object
-    root = tree.getroot() # Get the root element of the XML tree
+    script_path = os.path.join(script_dir, 'OPGEEv4/opgee/etc/fuse.xml') # Prepare the relative path to the XML file
+    
+    if not os.path.exists(script_path) or os.stat(script_path).st_size == 0: # check for missing/empty file
+        root = ET.Element('Model') # create a <Model> element as root                                        
+        tree = ET.ElementTree(root) # wrap it in an ElementTree
+    else:
+        tree = ET.parse(script_path)  # Parse the XML file into an ElementTree object
+        root = tree.getroot() # Get the root element of the XML tree
 
     # Dictionary with keys and values to be updated in the Analysis element
     analysis_updates = {
@@ -278,19 +296,24 @@ def main():
 
     # Update or create Field elements
     for field_name, field_updates in field_updates_dicts.items():
-        # Find the Field element with the required field name and the "modifies" attribute set to "template"
-        field = root.find(f'.//Field[@name="{field_name}"][@modifies="template"]')
+        field = root.find(f'.//Field[@name="{field_name}"][@modifies="template"]') # Find the Field element with the required field name and the "modifies" attribute set to "template"
         if field is not None:
-            # Update existing Field element
-            for a in field.findall('A'):
-                if a.get('name') in field_updates:
-                    value = field_updates[a.get('name')]
-                    value = '' if pd.isna(value) else str(value)  # Replace NaN with an empty string, otherwise convert to string
-                    a.text = value
-        else:
-            # If the Field element does not exist, create a new one
-            new_field = create_field_element(field_name, field_updates)
-            root.append(new_field) # Append the new Field element to the root
+            root.remove(field) # Remove field if it exists, this enables accurate reprinting of the field elements if sub-elements are removed by user
+
+        new_field = create_field_element(field_name, field_updates)
+        root.append(new_field) # Append the new Field element to the root
+
+        # old code for dealing with field elements:
+        #     # Update existing Field element
+        #     for a in field.findall('A'):
+        #         if a.get('name') in field_updates:
+        #             value = field_updates[a.get('name')]
+        #             value = '' if pd.isna(value) else str(value)  # Replace NaN with an empty string, otherwise convert to string
+        #             a.text = value
+        # else:
+        #     # If the Field element does not exist, create a new one
+        #     new_field = create_field_element(field_name, field_updates)
+        #     root.append(new_field) # Append the new Field element to the root
 
     # Used for Debugging
     # print(xml_str)
@@ -300,23 +323,36 @@ def main():
     # print(df.head())
 
     # # Convert the modified XML tree to a string
-    xml_str = ET.tostring(root, encoding='utf-8', method='xml')
+    # xml_str = ET.tostring(root, encoding='utf-8', method='xml')
 
-    # Parse the XML string with minidom for pretty printing
-    parsed_xml = minidom.parseString(xml_str)
-    pretty_xml_str = parsed_xml.toprettyxml(indent='    ')
+    # # Parse the XML string with minidom for pretty printing
+    # parsed_xml = minidom.parseString(xml_str)
+    # pretty_xml_str = parsed_xml.toprettyxml(indent='    ')
 
-    # Remove excessive newlines
-    final_xml_str = remove_excessive_newlines(pretty_xml_str)
+    # # Remove excessive newlines
+    # final_xml_str = remove_excessive_newlines(pretty_xml_str)
 
     # Write the properly formatted XML back to the file
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-    script_path_4 = os.path.join(script_dir, 'OPGEEv4/opgee/etc/opgee.xml') # Prepare the relative path to the XML file
+    script_path_4 = os.path.join(script_dir, 'OPGEEv4/opgee/etc/fuse.xml') # Prepare the relative path to the XML file
 
-    # Open the XML file in "write" mode with UTF-8 encoding and write the final XML string to it
-    with open(script_path_4, 'w', encoding='utf-8') as f:
-        f.write(final_xml_str)
+    # # Open the XML file in "write" mode with UTF-8 encoding and write the final XML string to it
+    # with open(script_path_4, 'w', encoding='utf-8') as f:
+    #     f.write(final_xml_str)
 
+    rough = ET.tostring(root, encoding='UTF-8')  # dump tree to raw bytes (no declaration)                                       
+    reparsed = minidom.parseString(rough)        # parse into DOM for pretty‐print   
+
+    # produce a UTF-8-encoded pretty XML with declaration                                      
+    pretty_bytes = reparsed.toprettyxml(indent='    ', encoding='UTF-8')  
+
+    # remove any blank lines that toprettyxml might have inserted
+    lines = [line for line in pretty_bytes.splitlines() if line.strip()]                   
+    final = b'\n'.join(lines)       
+
+    # write bytes (including XML declaration) back to the file                                                       
+    with open(script_path_4, 'wb') as f:                                                    
+        f.write(final)    
     print('Functional unit and fields updated successfully.')
 
 
