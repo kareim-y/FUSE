@@ -8,6 +8,9 @@ import pickle
 import os
 import importlib
 import platform
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Add the parent directory to sys.path
+from OPGEE_post_proc import post_proc
 
 def validate_date(date_text, format):
     """
@@ -236,8 +239,8 @@ def open_graph_list(list_directory):
     Returns:
         None
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # folder where the .txt file is
-    full_path = os.path.join(base_dir, list_directory)
+    base_dir = os.path.dirname(os.path.abspath(__file__)) 
+    full_path = os.path.join(base_dir, list_directory)      # folder where the .txt file is
 
     system_platform = platform.system()
     try:
@@ -605,6 +608,7 @@ tk.Label(scrollable_frame, text= "______________________________________________
 tk.Label(scrollable_frame, text= "________________________________________________________________________________________________________________________________").grid(row=30, columnspan=3, sticky='w')
 tk.Label(scrollable_frame, text= "________________________________________________________________________________________________________________________________").grid(row=33, columnspan=3, sticky='w')
 tk.Label(scrollable_frame, text= "________________________________________________________________________________________________________________________________").grid(row=42, columnspan=3, sticky='w')
+tk.Label(scrollable_frame, text= "________________________________________________________________________________________________________________________________").grid(row=49, columnspan=3, sticky='w')
 
 # Create labels for production data analysis options
 prod_graph_label = tk.Label(scrollable_frame, text="Choose graphs To display from the \"First Year Production Trend Analysis\"\nTo view available graphs click \"Graphs Available\" button to the right\nInsert 0 to skip", state=tk.DISABLED, justify='left')
@@ -642,6 +646,12 @@ min_welltime_label.grid(row=46, sticky='w')
 min_wellprod_label = tk.Label(scrollable_frame, text="Minimum oil production (bbl/day)", state=tk.DISABLED, justify='left')
 min_wellprod_label.grid(row=47, sticky='w')
 
+# Create labels for OPGEE post-processing
+opgee_postproc_label = tk.Label(scrollable_frame, text="Enter directory of the OPGEEv4 results CSV file\n(NOTE: default directory is automatically entered)", state=tk.DISABLED, justify='left')
+opgee_postproc_label.grid(row=51, sticky='w')
+opgee_postproc_export_label = tk.Label(scrollable_frame, text="Enter OPGEE post-processing export directory\n(NOTE: default directory is automatically entered)", state=tk.DISABLED, justify='left')
+opgee_postproc_export_label.grid(row=52, sticky='w')
+
 # tk.Label(app, text="Enter the Start Date (YYYY-MM):").grid(row=8)
 # tk.Label(app, text="Enter the End Date (YYYY-MM):").grid(row=9)
 
@@ -667,6 +677,8 @@ facility_print_BC_entry = tk.BooleanVar()
 
 OPGEE_dsitribution_entry = tk.BooleanVar()
 OPGEE_export_entry = tk.BooleanVar()
+
+OPGEE_postprocessing = tk.BooleanVar()
 
 # Production Data checkbox
 tk.Checkbutton(scrollable_frame, text="Production Data", font='Helvetica 14 bold', variable = prod_data_checkbox_entry,
@@ -722,6 +734,11 @@ tk.Checkbutton(scrollable_frame, text="Export to OPGEE", font='Helvetica 14 bold
             command=lambda: toggle_state(OPGEE_export_entry, opgee_export_label, min_welltime_label, min_wellprod_label, min_welltime_entry,
                                         min_wellprod_entry)).grid(row=44, column=0, sticky='W')
 
+# OPGEE post-processing checkbox
+tk.Checkbutton(scrollable_frame, text="OPGEE Post-Processing", font='Helvetica 14 bold', variable = OPGEE_postprocessing,
+            command=lambda: toggle_state(OPGEE_postprocessing, opgee_postproc_label, opgee_postproc_export_label, opgee_output_entry,
+                                        opgee_postproc_export_entry), state=tk.NORMAL).grid(row=50, column=0, sticky='W')
+
 # Input Boxes for user data entries
 project_name_entry = tk.Entry(scrollable_frame)
 drilled_after_entry = tk.Entry(scrollable_frame)
@@ -755,26 +772,14 @@ inject_enddate_entry = tk.Entry(scrollable_frame, state=tk.DISABLED)
 facility_startdate_entry = tk.Entry(scrollable_frame, state=tk.DISABLED)
 facility_enddate_entry = tk.Entry(scrollable_frame, state=tk.DISABLED)
 
-# Entries realted to OPGEE options
+# Entries related to OPGEE options
 min_welltime_entry = tk.Entry(scrollable_frame, state=tk.DISABLED)
 min_wellprod_entry = tk.Entry(scrollable_frame, state=tk.DISABLED)
 
-# Pre-fill some input boxes with default values
-project_name_entry.insert(0, "Test Project")
-drilled_after_entry.insert(0, "01/05/2016")
-drilled_before_entry.insert(0, "01/09/2016")
-# provinces_entry.insert(0, "AB")
-formations_entry.insert(0, "Cambrian,Kcard_ss,Dduvernay,Delk_pt,Dleduc")
-horizontal_entry.insert(0, "Both")
-min_gor_entry.insert(0, "100")
-max_gor_entry.insert(0, "1000")
-prod_graph_entry.insert(0, "5")
-prod_graph_entry2.insert(0, "4")
-prod_startdate_entry.insert(0, "2016-01")
-prod_enddate_entry.insert(0, "2016-05")
-inject_startdate_entry.insert(0, "2016-01")
-inject_enddate_entry.insert(0, "2016-05")
-inject_graph_entry.insert(0, "3")
+# Entries related to OPGEE post-processing
+opgee_output_entry = tk.Entry(scrollable_frame, state=tk.NORMAL)
+opgee_postproc_export_entry = tk.Entry(scrollable_frame, state=tk.NORMAL)
+
 
 # Project the input boxes within the grid layout
 project_name_entry.grid(row=3, column=1)
@@ -810,6 +815,10 @@ facility_enddate_entry.grid(row=37, column=1)
 min_welltime_entry.grid(row= 46, column=1)
 min_wellprod_entry.grid(row=47, column=1)
 
+opgee_output_entry.grid(row= 51, column=1)
+opgee_postproc_export_entry.grid(row= 52, column=1)
+
+
 # Add buttons for searching for available formations
 tk.Button(scrollable_frame, text='Search', command=open_formations_list).grid(row=7, column=2, padx=10)
 
@@ -827,6 +836,43 @@ check_libraries_button = tk.Button(scrollable_frame, text="Check Installation of
 check_libraries_button.grid(row=48, column=2, pady=4)
 # Add button for submitting inputs into FUSE tool
 tk.Button(scrollable_frame, text='Submit', command=submit_data).grid(row=48, column=1, pady=4)
+
+# Find & pre-fill OPGEE post-processing directories
+fuse_base_dir = os.path.dirname(os.path.abspath(__file__))                      # Get the current file's directory
+fuse_parent_dir = os.path.dirname(fuse_base_dir)                                # Go up one level
+LCA_grandparent_dir = os.path.dirname(fuse_parent_dir)                          # Go up two levels
+opgee_output_dir = "OPGEEv4/opgee/output/carbon_intensity.csv"                  # Directory of OPGEE results
+postproc_dir = "OPGEE post processing"                                          # Directory to save post processing results
+
+opgee_output_entry.insert(0, opgee_output_dir)                                  # Insert OPGEE results directory to GUI
+opgee_postproc_export_entry.insert(0, postproc_dir)                             # Insert post processing directory to GUI
+opgee_output_str = opgee_output_entry.get()                                     # Convert tk.Entry widget to string
+opgee_postproc_export_str = opgee_postproc_export_entry.get()                   # Convert tk.Entry widget to string
+
+full_path_opgee_output = os.path.join(LCA_grandparent_dir, opgee_output_str)    # Full path to OPGEE results                                      
+full_path_postproc = os.path.join(fuse_base_dir, opgee_postproc_export_str)     # Full path to save post processing results
+
+# Add button for running OPGEE post-processing
+tk.Button(scrollable_frame, text='Submit', command=lambda: post_proc(full_path_opgee_output, full_path_postproc)).grid(row=53, column=1, pady=4)
+
+
+# Pre-fill some input boxes with default values
+project_name_entry.insert(0, "Test Project")
+drilled_after_entry.insert(0, "01/01/2019")
+drilled_before_entry.insert(0, "01/04/2025")
+# provinces_entry.insert(0, "AB")
+formations_entry.insert(0, "Cambrian,Kcard_ss,Dduvernay,Delk_pt,Dleduc")
+horizontal_entry.insert(0, "Both")
+min_gor_entry.insert(0, "0.00001")
+max_gor_entry.insert(0, "1000000000")
+prod_graph_entry.insert(0, "0")
+prod_graph_entry2.insert(0, "0")
+prod_startdate_entry.insert(0, "2019-01")
+prod_enddate_entry.insert(0, "2025-01")
+inject_startdate_entry.insert(0, "2019-01")
+inject_enddate_entry.insert(0, "2025-04")
+inject_graph_entry.insert(0, "0")
+
 
 # Start the Tkinter "event loop" to display the GUI
 app.mainloop()
