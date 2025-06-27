@@ -91,13 +91,13 @@ def create_field_element(field_name, field_updates):
     for key, value in field_updates.items():
         value = '' if pd.isna(value) else str(value)  # Replace NaN with an empty string, otherwise convert to string
 
-        if key == 'GOR':                              # When we're handling the GOR variable
+        if key in ('GOR', 'WOR'):                              # When we're handling the GOR variable
             try:
                 # try to parse it as a float
                 gor_val = float(value)
             except ValueError:
                 gor_val = 0.0                         # Non-numeric fall-back
-            if gor_val == 0.0:                        # If it's exactly zero
+            if gor_val in (0.0, 0, 0.00):            # If it's exactly zero
                 value = '0.00001'                     # Enforce a small minimum value
 
         if key in ['fraction_diluent', 'heater_treater']:
@@ -130,6 +130,30 @@ def remove_excessive_newlines(xml_str):
     lines = xml_str.split('\n')
     filtered_lines = [line for line in lines if line.strip() != '']
     return '\n'.join(filtered_lines)
+
+def export_name_api(root, csv_path):
+    """
+    Extracts each Field’s ‘name’ and ‘API’ values and writes them
+    in two rows: the first row starts with ‘name’ followed by all field names,
+    the second row starts with ‘API’ followed by all API values.
+    """
+    names = []
+    apis  = []
+
+    # Collect the values
+    for field in root.findall('.//Field[@modifies="template"]'):
+        name_elem = field.find('A[@name="name"]')
+        api_elem  = field.find('A[@name="API"]')
+        if name_elem is not None and api_elem is not None:
+            names.append(name_elem.text)
+            apis.append(api_elem.text)
+            print(f"{field.get('name')} ready for exporting")
+
+    # Build a DataFrame with two rows and write it out horizontally
+    df = pd.DataFrame([names, apis], index=['name', 'API'])
+    df.to_csv(csv_path, header=False)
+
+    print(f"Exported {len(names)} field names and API {len(apis)} to {csv_path}")
 
 def main():
 
@@ -169,7 +193,7 @@ def main():
         'transport_dist_tanker', 'transport_dist_barge', 'transport_dist_pipeline', 'transport_dist_rail',
         'transport_dist_truck', 'ocean_tanker_size', 'small_sources_emissions'
     ]
-    print(len(parameters))
+    # print(len(parameters))
 
     # Variables to be removed from each field dictionary
     variables_to_remove = [
@@ -189,7 +213,7 @@ def main():
     # Read the text file containing the project name
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
     script_path_2 = os.path.join(script_dir, 'FUSE/project_name.txt')
-    with open(script_path_2, 'r') as file: # open file in read only mode
+    with open(script_path_2, 'r') as file:                   # open file in read only mode
         # Read the current contents
         content = file.read()
         # Remove all spaces from the content
@@ -200,16 +224,16 @@ def main():
     # excel_file = 'FUSE_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_TestProject copy.xlsm'  # Replace with The OPGEE Excel file path
     script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
     script_path_3 = os.path.join(script_dir, 'FUSE/FUSE_py3/Project Data/OPGEE/COEA - OPGEE/OPGEE_3.0c_') # Construct directory of excel file
-    excel_file = script_path_3 + project_name + '.xlsm' # Append the project name and file extension to complete the Excel file path
+    excel_file = script_path_3 + project_name + '.xlsm'      # Append the project name and file extension to complete the Excel file path
     print(excel_file) # Used for Debugging
-    df = pd.read_excel(excel_file, sheet_name='Inputs') # Load the 'Inputs' sheet from the specified Excel file into a Pandas DataFrame
+    df = pd.read_excel(excel_file, sheet_name='Inputs')      # Load the 'Inputs' sheet from the specified Excel file into a Pandas DataFrame
 
     # Create the field_updates_dicts based on the extracted values
     field_updates_dicts = {}
     i = 0
-    for col in range(7, df.shape[1]):  # Start from column H (index 7)
+    for col in range(7, df.shape[1]):                      # Start from column H (index 7)
 
-        field_name = df.iloc[3, col]  # Field name in row 5 (index 4)
+        field_name = df.iloc[3, col]                       # Field name in row 5 (index 4)
         
         # Ensures that Field names after 500 are not left blank
         if pd.isna(field_name):
@@ -220,7 +244,7 @@ def main():
         values = extract_field_data(df, col)
 
         # Extract lists for special cases
-        ecosystem_richness_values = values[51:54]  # Indices 91-93
+        ecosystem_richness_values = values[51:54]           # Indices 91-93
         field_development_intensity_values = values[54:57]  # Indices 95-97
 
         indexes_to_pop = [52,53,54,55]
@@ -228,7 +252,7 @@ def main():
             values.pop(index)
 
         print(field_development_intensity_values)
-        if any(pd.notna(values)):  # Check if there are any non-NaN values
+        if any(pd.notna(values)):                           # Check if there are any non-NaN values
             field_updates = {
                 parameters[i]: '' if pd.isna(values[i]) else str(values[i])
                 for i in range(min(len(parameters), len(values)))
@@ -258,7 +282,7 @@ def main():
     #             a.text = analysis_updates[a.get('name')]
 
     # Update or create Analysis element
-    analysis = root.find('.//Analysis[@name="FUSE_run"]')  # Find the Analysis element with the name "FUSE_run"
+    analysis = root.find('.//Analysis[@name="FUSE_run"]')                                # Find the Analysis element with the name "FUSE_run"
 
     # If the Analysis element does not exist, create it
     if analysis is None:
@@ -292,28 +316,16 @@ def main():
     for field in existing_fields:
         field_name = field.get('name')
         if field_name not in required_field_names:
-            root.remove(field)  # Remove fields that are not in the required list
+            root.remove(field)                                                                             # Remove fields that are not in the required list
 
     # Update or create Field elements
     for field_name, field_updates in field_updates_dicts.items():
-        field = root.find(f'.//Field[@name="{field_name}"][@modifies="template"]') # Find the Field element with the required field name and the "modifies" attribute set to "template"
+        field = root.find(f'.//Field[@name="{field_name}"][@modifies="template"]')                         # Find the Field element with the required field name and the "modifies" attribute set to "template"
         if field is not None:
-            root.remove(field) # Remove field if it exists, this enables accurate reprinting of the field elements if sub-elements are removed by user
+            root.remove(field)                                                                             # Remove field if it exists, this enables accurate reprinting of the field elements if sub-elements are removed by user
 
         new_field = create_field_element(field_name, field_updates)
         root.append(new_field) # Append the new Field element to the root
-
-        # old code for dealing with field elements:
-        #     # Update existing Field element
-        #     for a in field.findall('A'):
-        #         if a.get('name') in field_updates:
-        #             value = field_updates[a.get('name')]
-        #             value = '' if pd.isna(value) else str(value)  # Replace NaN with an empty string, otherwise convert to string
-        #             a.text = value
-        # else:
-        #     # If the Field element does not exist, create a new one
-        #     new_field = create_field_element(field_name, field_updates)
-        #     root.append(new_field) # Append the new Field element to the root
 
     # Used for Debugging
     # print(xml_str)
@@ -322,26 +334,15 @@ def main():
     # print(field_updates_dicts)
     # print(df.head())
 
-    # # Convert the modified XML tree to a string
-    # xml_str = ET.tostring(root, encoding='utf-8', method='xml')
-
-    # # Parse the XML string with minidom for pretty printing
-    # parsed_xml = minidom.parseString(xml_str)
-    # pretty_xml_str = parsed_xml.toprettyxml(indent='    ')
-
-    # # Remove excessive newlines
-    # final_xml_str = remove_excessive_newlines(pretty_xml_str)
-
     # Write the properly formatted XML back to the file
-    script_dir = os.path.dirname(os.path.dirname(__file__))  # Go up one directory level
-    script_path_4 = os.path.join(script_dir, 'OPGEEv4/opgee/etc/fuse.xml') # Prepare the relative path to the XML file
+    script_dir = os.path.dirname(os.path.dirname(__file__))                                                 # Go up one directory level
+    script_path_4 = os.path.join(script_dir, 'OPGEEv4/opgee/etc/fuse.xml')                                  # Prepare the relative path to the XML file
 
-    # # Open the XML file in "write" mode with UTF-8 encoding and write the final XML string to it
-    # with open(script_path_4, 'w', encoding='utf-8') as f:
-    #     f.write(final_xml_str)
+    csv_path_name_api = os.path.join(script_dir, 'FUSE/FUSE_py3/OPGEE post processing/field_name_api.csv')  # directroy of API and field name csv file
+    export_name_api(root, csv_path_name_api)                                                                # used to export API and field name to csv fil in the OPGEE post processing folder
 
-    rough = ET.tostring(root, encoding='UTF-8')  # dump tree to raw bytes (no declaration)                                       
-    reparsed = minidom.parseString(rough)        # parse into DOM for pretty‐print   
+    rough = ET.tostring(root, encoding='UTF-8')                                                             # dump tree to raw bytes (no declaration)                                       
+    reparsed = minidom.parseString(rough)                                                                   # parse into DOM for pretty‐print   
 
     # produce a UTF-8-encoded pretty XML with declaration                                      
     pretty_bytes = reparsed.toprettyxml(indent='    ', encoding='UTF-8')  

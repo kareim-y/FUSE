@@ -1,10 +1,13 @@
 Project Data/
 Project Data_old/
 myenv/
+OPGEE_postproc_results.csv
 Kareem_Notes.md
 OPGEE_3.0c_TestProject copy.xlsm
 testing file/
 model_input_instance.pkl
+.DS_Store
+remove_semicolon_lines.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
