@@ -19,9 +19,7 @@ FUSE (previously named COEA) originally required python 2.7, it is now updated t
 
 ## Datasets
 
-The FUSE tool relies on several datasets describing several activities of the upstream Canadian O&G industry.
-
-The Project Data can be downloaded and unzipped from here - https://drive.google.com/file/d/17g927s3yLod_ujxeNGZtKvLEfnrX6hYj/view?usp=sharing
+The FUSE tool relies on several datasets describing several activities of the upstream Canadian O&G industry. The datasets have been obtained from Petrinex (free access) and geoSCOUT (paid license)
 
 ## Setup
 
