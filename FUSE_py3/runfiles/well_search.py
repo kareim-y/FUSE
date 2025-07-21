@@ -20,6 +20,7 @@ import chardet
 
 from model_inputs import ModelInputs
 import pickle
+from tkinter import messagebox, StringVar
 
 def introduction():
 
@@ -148,7 +149,7 @@ def well_search():
 	print("Chosen Maximum First 12 month Ave GOR (m3/m3)", max_GOR)
 
 	if len(str(max_GOR)) == 0:
-		max_GOR = 100000000000
+		max_GOR = 10000000000000
 
 	if len(str(min_GOR)) == 0:
 		min_GOR = 0
@@ -194,12 +195,20 @@ def well_search():
 				'''
 
 				try:
-					GOR = float(row[well_data_headings.index('First 12 mo. Ave GOR (m3/m3)')])
+					GOR = float(row[well_data_headings.index('First 12 mo. Ave GOR (m3/m3)')]) # Checks if well row has a GOR datapoint, if so, assigns it
 					#if GOR == 0:
 					#	if float(first_12_gas) == 0:
 					#		GOR = float(most_recent_GOR)
 				except:
-					GOR = -1
+					# GOR = -1
+					# FUSE edits:
+					try: 
+						if row[well_data_headings.index('First 12 mo. Ave GOR (m3/m3)')] == '': # used to identify gas wells that do not have a GOR datapoint
+							if float(first_12_gas) > 0:
+								GOR = float(1000000000000)
+					except:
+						GOR = -1
+
 				
 				#(field_name in ['NORTHERN MONTNEY']) and \
 				#(field_name in ['HERITAGE']) and \
@@ -230,6 +239,10 @@ def well_search():
 	print(('Project Name: ' + project_name))
 	print((str(len(wells_list)) + ' Project Wells Found Meeting Criteria\n\n'))
 	
+	# FUSE edits
+	if len(wells_list) == 0:
+		messagebox.showinfo("Number of Wells", f"Your input criteria returned {len(wells_list)} wells, please modify your inputs and try again.")
+		return
 
 	time.sleep(5)
 

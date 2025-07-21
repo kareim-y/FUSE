@@ -53,6 +53,8 @@ def general_well_data_analysis(header_data, well_data, OPGEE_data, field_name):
 			well_status_index = i
 		if header_data[i] == 'First 12 mo. Ave GOR (m3/m3)':
 			GOR_index = i
+		if header_data[i] == 'First 12 mo. Total GAS (e3m3)':
+			first_GAS_index = i
 
 	#initially set OPGEE to defaults
 
@@ -99,11 +101,18 @@ def general_well_data_analysis(header_data, well_data, OPGEE_data, field_name):
 
 		#well zonation count
 		zone_criteria = ['GOR = 0 or > 17800 ', '1780 < GOR =< 17800','267 < GOR =< 1780', 'GOR =< 267']
-		
+
 		try:
-			GOR = float(well_data[well][GOR_index])
+			GOR = float(well_data[well][GOR_index]) # Used to check if well has GOR datapoint, if so, it applies it to GOR variable
 		except:
-			GOR = 'NA'
+			# GOR = 'NA'
+			# FUSE edits
+			try:
+				if float(well_data[well][first_GAS_index]) > 0: # Checks if well is Gas producing, if so, assigns it a high GOR
+					GOR = 1000000000000
+			except:
+				GOR = "NA"
+
 		#GOR = 1
 
 		if (GOR == 0 or GOR > 17800):

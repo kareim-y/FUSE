@@ -8,6 +8,8 @@ testing file/
 model_input_instance.pkl
 .DS_Store
 remove_semicolon_lines.py
+FUSE_py3/OPGEE post processing/OPGEE_postproc_results.csv
+FUSE_py3/OPGEE\ post\ processing/field_name_api.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
